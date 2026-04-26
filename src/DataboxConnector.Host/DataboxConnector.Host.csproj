@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-DataboxConnector.Host-9e7fcdde-b6fd-473f-bf21-554957eb626d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataboxConnector.Core\DataboxConnector.Core.csproj" />
+    <ProjectReference Include="..\DataboxConnector.Sources.GitHub\DataboxConnector.Sources.GitHub.csproj" />
+    <ProjectReference Include="..\DataboxConnector.Sources.Spotify\DataboxConnector.Sources.Spotify.csproj" />
+    <ProjectReference Include="..\DataboxConnector.Sinks.Databox\DataboxConnector.Sinks.Databox.csproj" />
+    <ProjectReference Include="..\DataboxConnector.Scheduling\DataboxConnector.Scheduling.csproj" />
+  </ItemGroup>
+</Project>
