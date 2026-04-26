@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DataboxConnector.Core/DataboxConnector.Core.csproj" />
+    <Project Path="src/DataboxConnector.Host/DataboxConnector.Host.csproj" />
+    <Project Path="src/DataboxConnector.Scheduling/DataboxConnector.Scheduling.csproj" />
+    <Project Path="src/DataboxConnector.Sinks.Databox/DataboxConnector.Sinks.Databox.csproj" />
+    <Project Path="src/DataboxConnector.Sources.GitHub/DataboxConnector.Sources.GitHub.csproj" />
+    <Project Path="src/DataboxConnector.Sources.Spotify/DataboxConnector.Sources.Spotify.csproj" />
+    <Project Path="src/DataboxConnector.Tools.SpotifyAuth/DataboxConnector.Tools.SpotifyAuth.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DataboxConnector.Core.Tests/DataboxConnector.Core.Tests.csproj" />
+    <Project Path="tests/DataboxConnector.Sinks.Databox.Tests/DataboxConnector.Sinks.Databox.Tests.csproj" />
+    <Project Path="tests/DataboxConnector.Sources.GitHub.Tests/DataboxConnector.Sources.GitHub.Tests.csproj" />
+    <Project Path="tests/DataboxConnector.Sources.Spotify.Tests/DataboxConnector.Sources.Spotify.Tests.csproj" />
+  </Folder>
+</Solution>
