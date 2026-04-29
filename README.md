@@ -1,6 +1,6 @@
 # Databox Engineering Challenge
 
-A .NET 10 connector that extracts data from external sources (GitHub, Spotify) and pushes it to the [Databox Ingestion API](https://developers.databox.com/) for visualization and analytics.
+A .NET 10 connector that extracts data from external sources (GitHub, Spotify) and pushes it to the Databox Ingestion API for visualization and analytics.
 
 📊 **[Live Databoard](https://app.databox.com/datawall/23d0599b1e9c8b575673a5aac8bb21ef3d107ec69f1bb9f)** — view the metrics produced by this connector
 
@@ -27,10 +27,10 @@ For deeper architectural detail, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) (`10.0.201` or newer)
-- A [Databox](https://databox.com/) account with an [API key](https://app.databox.com/profile/api-keys)
-- A [GitHub Personal Access Token](https://github.com/settings/tokens) with `public_repo` scope (or `repo` for private repos)
-- A [Spotify Developer App](https://developer.spotify.com/dashboard) with redirect URI set to `http://127.0.0.1:8888/callback`
+- .NET 10 SDK (`10.0.201` or newer)
+- A Databox account with an API key
+- A GitHub Personal Access Token with `public_repo` scope (or `repo` for private repos)
+- A Spotify Developer App with redirect URI set to `http://127.0.0.1:8888/callback`
 
 ### 1. Clone and build
 
