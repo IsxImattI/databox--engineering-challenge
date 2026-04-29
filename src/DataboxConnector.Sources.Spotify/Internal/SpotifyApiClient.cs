@@ -1,6 +1,8 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DataboxConnector.Core.Exceptions;
 using DataboxConnector.Sources.Spotify.Models;
+using DataboxConnector.Sources.Spotify.OAuth;
 using Microsoft.Extensions.Logging;
 
 namespace DataboxConnector.Sources.Spotify.Internal;
@@ -9,23 +11,31 @@ namespace DataboxConnector.Sources.Spotify.Internal;
 /// HTTP-backed implementation of <see cref="ISpotifyApiClient"/>.
 /// </summary>
 /// <remarks>
-/// The <see cref="HttpClient"/> is preconfigured with the Spotify API base
-/// URL and runs through <see cref="SpotifyAuthHandler"/>, which attaches
-/// the Bearer token automatically.
+/// Each request fetches a fresh access token from the
+/// <see cref="ISpotifyTokenProvider"/>, which caches and refreshes transparently.
+/// The token is attached as a Bearer Authorization header on the per-request
+/// message rather than the shared HttpClient defaults, since the value can
+/// change after a refresh.
 /// </remarks>
 internal sealed class SpotifyApiClient : ISpotifyApiClient
 {
     private const string SourceName = "spotify";
 
     private readonly HttpClient _http;
+    private readonly ISpotifyTokenProvider _tokenProvider;
     private readonly ILogger<SpotifyApiClient> _logger;
 
-    public SpotifyApiClient(HttpClient http, ILogger<SpotifyApiClient> logger)
+    public SpotifyApiClient(
+        HttpClient http,
+        ISpotifyTokenProvider tokenProvider,
+        ILogger<SpotifyApiClient> logger)
     {
         ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(tokenProvider);
         ArgumentNullException.ThrowIfNull(logger);
 
         _http = http;
+        _tokenProvider = tokenProvider;
         _logger = logger;
     }
 
@@ -39,7 +49,10 @@ internal sealed class SpotifyApiClient : ISpotifyApiClient
 
         _logger.LogDebug("Fetching Spotify recently played after {After}.", after);
 
-        using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        await AttachAuthAsync(request, cancellationToken).ConfigureAwait(false);
+
+        using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await EnsureSuccessAsync(response, "recently-played", cancellationToken).ConfigureAwait(false);
 
         var payload = await response.Content
@@ -62,7 +75,10 @@ internal sealed class SpotifyApiClient : ISpotifyApiClient
 
         _logger.LogDebug("Fetching Spotify top tracks: range={Range} limit={Limit}.", timeRange, limit);
 
-        using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        await AttachAuthAsync(request, cancellationToken).ConfigureAwait(false);
+
+        using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
         await EnsureSuccessAsync(response, $"top-tracks/{timeRange}", cancellationToken).ConfigureAwait(false);
 
         var payload = await response.Content
@@ -70,6 +86,12 @@ internal sealed class SpotifyApiClient : ISpotifyApiClient
             .ConfigureAwait(false);
 
         return payload?.Items ?? new List<SpotifyTrack>();
+    }
+
+    private async Task AttachAuthAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var token = await _tokenProvider.GetAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     private static async Task EnsureSuccessAsync(
@@ -100,5 +122,5 @@ internal sealed class SpotifyApiClient : ISpotifyApiClient
     }
 
     private static string Truncate(string value, int max) =>
-        value.Length <= max ? value : value[..max] + "…";
+        value.Length <= max ? value : value[..max] + "...";
 }

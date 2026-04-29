@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace DataboxConnector.Sinks.Databox.DependencyInjection;
 
@@ -51,17 +52,22 @@ public static class DataboxSinkServiceCollectionExtensions
                 client.Timeout = TimeSpan.FromSeconds(30);
             })
             // 4. Resilience: retry transient failures, with backoff, plus a per-attempt timeout.
-            .AddStandardResilienceHandler(options =>
+            .AddStandardResilienceHandler(o =>
             {
-                options.Retry.MaxRetryAttempts = 3;
-                options.Retry.UseJitter = true;
-                options.Retry.Delay = TimeSpan.FromSeconds(1);
-                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
+                o.Retry.MaxRetryAttempts = 3;
+                o.Retry.UseJitter = true;
+                o.Retry.Delay = TimeSpan.FromSeconds(1);
+                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
             });
 
         // 5. Register the sink itself. It depends on the API client + identifier store.
-        services.AddSingleton<ISinkConnector, DataboxSink>();
+        services.AddSingleton<ISinkConnector>(sp => new DataboxSink(
+            sp.GetRequiredService<IDataboxApiClient>(),
+            sp.GetRequiredService<IDataboxIdentifierStore>(),
+            sp.GetRequiredService<IOptions<DataboxOptions>>(),
+            sp.GetRequiredService<ILogger<DataboxSink>>()));
         services.AddSingleton<DataboxSink>(sp => (DataboxSink)sp.GetRequiredService<ISinkConnector>());
 
         return services;

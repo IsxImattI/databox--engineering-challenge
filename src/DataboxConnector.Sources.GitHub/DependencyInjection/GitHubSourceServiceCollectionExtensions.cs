@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace DataboxConnector.Sources.GitHub.DependencyInjection;
 
@@ -45,21 +46,26 @@ public static class GitHubSourceServiceCollectionExtensions
             })
             .AddStandardResilienceHandler(o =>
             {
-                // GitHub limits authenticated requests to 5000/hour and applies
-                // secondary rate limits per endpoint. Be polite: retry conservatively
-                // and rely on backoff for 429/abuse-detection responses.
                 o.Retry.MaxRetryAttempts = 3;
-                o.Retry.UseJitter = true;
                 o.Retry.Delay = TimeSpan.FromSeconds(2);
-                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(20);
-                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
+                o.Retry.UseJitter = true;
+                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
             });
 
         // 3. Source connectors. Registered as both ISourceConnector (for the
         //    pipeline orchestrator to discover them) and as their concrete types
         //    (for jobs that target a specific source).
-        services.AddSingleton<GitHubCommitsSource>();
-        services.AddSingleton<GitHubPullRequestsSource>();
+        services.AddSingleton<GitHubCommitsSource>(sp => new GitHubCommitsSource(
+            sp.GetRequiredService<IGitHubApiClient>(),
+            sp.GetRequiredService<IOptions<GitHubOptions>>(),
+            sp.GetRequiredService<ILogger<GitHubCommitsSource>>()));
+
+        services.AddSingleton<GitHubPullRequestsSource>(sp => new GitHubPullRequestsSource(
+            sp.GetRequiredService<IGitHubApiClient>(),
+            sp.GetRequiredService<IOptions<GitHubOptions>>(),
+            sp.GetRequiredService<ILogger<GitHubPullRequestsSource>>()));
 
         services.AddSingleton<ISourceConnector>(sp => sp.GetRequiredService<GitHubCommitsSource>());
         services.AddSingleton<ISourceConnector>(sp => sp.GetRequiredService<GitHubPullRequestsSource>());

@@ -14,6 +14,7 @@ internal sealed class DataboxIngestionResponse
     public string? Status { get; set; }
 
     [JsonPropertyName("ingestionId")]
+    [JsonConverter(typeof(Internal.JsonNumberOrStringToStringConverter))]
     public string? IngestionId { get; set; }
 
     [JsonPropertyName("message")]

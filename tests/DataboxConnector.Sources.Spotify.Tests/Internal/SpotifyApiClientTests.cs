@@ -7,6 +7,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using RichardSzalay.MockHttp;
 using Xunit;
+using DataboxConnector.Sources.Spotify.OAuth;
 
 namespace DataboxConnector.Sources.Spotify.Tests.Internal;
 
@@ -18,7 +19,20 @@ public class SpotifyApiClientTests
     {
         var mock = new MockHttpMessageHandler();
         var http = new HttpClient(mock) { BaseAddress = ApiUri };
-        return (new SpotifyApiClient(http, NullLogger<SpotifyApiClient>.Instance), mock);
+        var tokenProvider = new FakeTokenProvider();
+        return (
+            new SpotifyApiClient(http, tokenProvider, NullLogger<SpotifyApiClient>.Instance),
+            mock);
+    }
+
+    /// <summary>
+    /// Test fake for ISpotifyTokenProvider that returns a static token without
+    /// touching the network.
+    /// </summary>
+    private sealed class FakeTokenProvider : DataboxConnector.Sources.Spotify.OAuth.ISpotifyTokenProvider
+    {
+        public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult("fake-test-token");
     }
 
     [Fact]

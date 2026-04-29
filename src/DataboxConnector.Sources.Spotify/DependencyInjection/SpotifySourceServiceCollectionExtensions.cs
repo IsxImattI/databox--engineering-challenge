@@ -54,7 +54,8 @@ public static class SpotifySourceServiceCollectionExtensions
                 o.Retry.Delay = TimeSpan.FromSeconds(1);
                 o.Retry.UseJitter = true;
                 o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
-                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
             });
 
         // 4. Token provider — depends on the named HttpClient above.
@@ -85,14 +86,22 @@ public static class SpotifySourceServiceCollectionExtensions
                 o.Retry.MaxRetryAttempts = 3;
                 o.Retry.Delay = TimeSpan.FromSeconds(1);
                 o.Retry.UseJitter = true;
-                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
+                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
                 o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
             });
 
         // 6. Source connectors, registered as both ISourceConnector (for
         //    pipeline discovery) and concrete types (for jobs).
-        services.AddSingleton<SpotifyRecentlyPlayedSource>();
-        services.AddSingleton<SpotifyTopTracksSource>();
+        services.AddSingleton<SpotifyRecentlyPlayedSource>(sp => new SpotifyRecentlyPlayedSource(
+            sp.GetRequiredService<ISpotifyApiClient>(),
+            sp.GetRequiredService<IOptions<SpotifyOptions>>(),
+            sp.GetRequiredService<ILogger<SpotifyRecentlyPlayedSource>>()));
+
+        services.AddSingleton<SpotifyTopTracksSource>(sp => new SpotifyTopTracksSource(
+            sp.GetRequiredService<ISpotifyApiClient>(),
+            sp.GetRequiredService<IOptions<SpotifyOptions>>(),
+            sp.GetRequiredService<ILogger<SpotifyTopTracksSource>>()));
 
         services.AddSingleton<ISourceConnector>(sp => sp.GetRequiredService<SpotifyRecentlyPlayedSource>());
         services.AddSingleton<ISourceConnector>(sp => sp.GetRequiredService<SpotifyTopTracksSource>());

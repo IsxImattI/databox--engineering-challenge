@@ -14,6 +14,7 @@ internal sealed class DataboxDataSourceResponse
     public string? Status { get; set; }
 
     [JsonPropertyName("id")]
+    [JsonConverter(typeof(Internal.JsonNumberOrStringToStringConverter))]
     public string? Id { get; set; }
 
     [JsonPropertyName("title")]
